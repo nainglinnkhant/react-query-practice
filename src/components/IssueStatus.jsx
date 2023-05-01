@@ -1,54 +1,53 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { StatusSelect } from "./StatusSelect";
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+
+import StatusSelect from './StatusSelect'
+
 export default function IssueStatus({ status, issueNumber }) {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
 
   const setStatus = useMutation(
-    (status) => {
+    status => {
       return fetch(`/api/issues/${issueNumber}`, {
-        method: "PUT",
+        method: 'PUT',
         headers: {
-          "content-type": "application/json",
+          'content-type': 'application/json',
         },
         body: JSON.stringify({ status }),
-      }).then((res) => res.json());
+      }).then(res => res.json())
     },
     {
-      onMutate: (status) => {
-        const oldStatus = queryClient.getQueryData([
-          "issues",
-          issueNumber,
-        ]).status;
-        queryClient.setQueryData(["issues", issueNumber], (data) => ({
+      onMutate: status => {
+        const oldStatus = queryClient.getQueryData(['issues', issueNumber]).status
+        queryClient.setQueryData(['issues', issueNumber], data => ({
           ...data,
           status,
-        }));
+        }))
 
         return function rollback() {
-          queryClient.setQueryData(["issues", issueNumber], (data) => ({
+          queryClient.setQueryData(['issues', issueNumber], data => ({
             ...data,
             status: oldStatus,
-          }));
-        };
+          }))
+        }
       },
       onError: (error, variables, rollback) => {
-        rollback();
+        rollback()
       },
       onSettled: () => {
-        queryClient.invalidateQueries(["issues", issueNumber], { exact: true });
+        queryClient.invalidateQueries(['issues', issueNumber], { exact: true })
       },
     }
-  );
+  )
   return (
-    <div className="issue-options">
+    <div className='issue-options'>
       <div>
         <span>Status</span>
         <StatusSelect
           noEmptyOption
           value={status}
-          onChange={(event) => setStatus.mutate(event.target.value)}
+          onChange={event => setStatus.mutate(event.target.value)}
         />
       </div>
     </div>
-  );
+  )
 }
