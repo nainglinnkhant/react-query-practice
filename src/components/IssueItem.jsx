@@ -20,15 +20,19 @@ export default function IssueItem({
   const assigneeUser = useUserData(assignee)
   const createdByUser = useUserData(createdBy)
   const queryClient = useQueryClient()
+
   return (
     <li
       onMouseEnter={() => {
-        queryClient.prefetchQuery(['issues', number.toString()], () =>
-          fetchWithError(`/api/issues/${number}`)
-        )
-        queryClient.prefetchInfiniteQuery(['issues', number.toString(), 'comments'], () =>
-          fetchWithError(`/api/issues/${number}/comments?page=1`)
-        )
+        queryClient.prefetchQuery({
+          queryKey: ['issues', number.toString()],
+          queryFn: () => fetchWithError(`/api/issues/${number}`),
+        })
+
+        queryClient.prefetchInfiniteQuery({
+          queryKey: ['issues', number.toString(), 'comments'],
+          queryFn: () => fetchWithError(`/api/issues/${number}/comments?page=1`),
+        })
       }}
     >
       <div>

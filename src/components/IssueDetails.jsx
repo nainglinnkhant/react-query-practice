@@ -11,26 +11,27 @@ import IssueStatus from './IssueStatus'
 import Loader from './Loader'
 
 function useIssueData(issueNumber) {
-  return useQuery(['issues', issueNumber], ({ signal }) => {
-    return fetch(`/api/issues/${issueNumber}`, { signal }).then(res => res.json())
+  return useQuery({
+    queryKey: ['issues', issueNumber],
+    queryFn: ({ signal }) => {
+      return fetch(`/api/issues/${issueNumber}`, { signal }).then(res => res.json())
+    },
   })
 }
 
 function useIssueComments(issueNumber) {
-  return useInfiniteQuery(
-    ['issues', issueNumber, 'comments'],
-    ({ signal, pageParam = 1 }) => {
+  return useInfiniteQuery({
+    queryKey: ['issues', issueNumber, 'comments'],
+    queryFn: ({ signal, pageParam = 1 }) => {
       return fetch(`/api/issues/${issueNumber}/comments?page=${pageParam}`, {
         signal,
       }).then(res => res.json())
     },
-    {
-      getNextPageParam: (lastPage, pages) => {
-        if (lastPage.length === 0) return
-        return pages.length + 1
-      },
-    }
-  )
+    getNextPageParam: (lastPage, pages) => {
+      if (lastPage.length === 0) return
+      return pages.length + 1
+    },
+  })
 }
 
 function Comment({ comment, createdBy, createdDate }) {

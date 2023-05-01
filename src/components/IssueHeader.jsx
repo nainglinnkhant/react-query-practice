@@ -14,6 +14,7 @@ export default function IssueHeader({
   const statusObject = possibleStatus.find(pstatus => pstatus.id === status)
 
   const createdUser = useUserData(createdBy)
+
   return (
     <header>
       <h2>

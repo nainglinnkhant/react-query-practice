@@ -5,21 +5,19 @@ export default function AddIssue() {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
 
-  const addIssue = useMutation(
-    issueBody =>
+  const addIssue = useMutation({
+    mutationFn: issueBody =>
       fetch('/api/issues', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(issueBody),
       }).then(res => res.json()),
-    {
-      onSuccess: data => {
-        queryClient.invalidateQueries(['issues'], { exact: true })
-        queryClient.setQueryData(['issues', data.number.toString()], data)
-        navigate(`/issue/${data.number}`)
-      },
-    }
-  )
+    onSuccess: data => {
+      queryClient.invalidateQueries(['issues'], { exact: true })
+      queryClient.setQueryData(['issues', data.number.toString()], data)
+      navigate(`/issue/${data.number}`)
+    },
+  })
 
   return (
     <div className='add-issue'>

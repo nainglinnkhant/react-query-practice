@@ -7,9 +7,10 @@ import IssueItem from './IssueItem'
 
 export default function IssuesList({ labels, status, pageNum, setPageNum }) {
   const queryClient = useQueryClient()
-  const issuesQuery = useQuery(
-    ['issues', { labels, status, pageNum }],
-    async ({ signal }) => {
+
+  const issuesQuery = useQuery({
+    queryKey: ['issues', { labels, status, pageNum }],
+    queryFn: async ({ signal }) => {
       const statusString = status ? `&status=${status}` : ''
       const labelsString = labels.map(label => `labels[]=${label}`).join('&')
       const paginationString = pageNum ? `&page=${pageNum}` : ''
@@ -27,20 +28,17 @@ export default function IssuesList({ labels, status, pageNum, setPageNum }) {
 
       return results
     },
-    {
-      keepPreviousData: true,
-    }
-  )
+    keepPreviousData: true,
+  })
+
   const [searchValue, setSearchValue] = useState('')
 
-  const searchQuery = useQuery(
-    ['issues', 'search', searchValue],
-    ({ signal }) =>
+  const searchQuery = useQuery({
+    queryKey: ['issues', 'search', searchValue],
+    queryFn: ({ signal }) =>
       fetch(`/api/search/issues?q=${searchValue}`, { signal }).then(res => res.json()),
-    {
-      enabled: searchValue.length > 0,
-    }
-  )
+    enabled: searchValue.length > 0,
+  })
 
   return (
     <div>

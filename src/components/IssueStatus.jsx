@@ -5,8 +5,8 @@ import StatusSelect from './StatusSelect'
 export default function IssueStatus({ status, issueNumber }) {
   const queryClient = useQueryClient()
 
-  const setStatus = useMutation(
-    status => {
+  const setStatus = useMutation({
+    mutationFn: status => {
       return fetch(`/api/issues/${issueNumber}`, {
         method: 'PUT',
         headers: {
@@ -15,29 +15,28 @@ export default function IssueStatus({ status, issueNumber }) {
         body: JSON.stringify({ status }),
       }).then(res => res.json())
     },
-    {
-      onMutate: status => {
-        const oldStatus = queryClient.getQueryData(['issues', issueNumber]).status
+    onMutate: status => {
+      const oldStatus = queryClient.getQueryData(['issues', issueNumber]).status
+      queryClient.setQueryData(['issues', issueNumber], data => ({
+        ...data,
+        status,
+      }))
+
+      return function rollback() {
         queryClient.setQueryData(['issues', issueNumber], data => ({
           ...data,
-          status,
+          status: oldStatus,
         }))
+      }
+    },
+    onError: (error, variables, rollback) => {
+      rollback()
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['issues', issueNumber], exact: true })
+    },
+  })
 
-        return function rollback() {
-          queryClient.setQueryData(['issues', issueNumber], data => ({
-            ...data,
-            status: oldStatus,
-          }))
-        }
-      },
-      onError: (error, variables, rollback) => {
-        rollback()
-      },
-      onSettled: () => {
-        queryClient.invalidateQueries(['issues', issueNumber], { exact: true })
-      },
-    }
-  )
   return (
     <div className='issue-options'>
       <div>

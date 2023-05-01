@@ -7,14 +7,16 @@ import { useUserData } from '../helpers/useUserData'
 export default function IssueAssignment({ assignee, issueNumber }) {
   const user = useUserData(assignee)
   const [menuOpen, setMenuOpen] = useState(false)
-  const usersQuery = useQuery(['users'], () =>
-    fetch('/api/users').then(res => res.json())
-  )
+
+  const usersQuery = useQuery({
+    queryKey: ['users'],
+    queryFn: () => fetch('/api/users').then(res => res.json()),
+  })
 
   const queryClient = useQueryClient()
 
-  const setAssignment = useMutation(
-    assignee => {
+  const setAssignment = useMutation({
+    mutationFn: assignee => {
       return fetch(`/api/issues/${issueNumber}`, {
         method: 'PUT',
         headers: {
@@ -23,29 +25,30 @@ export default function IssueAssignment({ assignee, issueNumber }) {
         body: JSON.stringify({ assignee }),
       }).then(res => res.json())
     },
-    {
-      onMutate: assignee => {
-        const oldAssignee = queryClient.getQueryData(['issues', issueNumber]).assignee
+    onMutate: assignee => {
+      const oldAssignee = queryClient.getQueryData(['issues', issueNumber]).assignee
+      queryClient.setQueryData(['issues', issueNumber], data => ({
+        ...data,
+        assignee,
+      }))
+
+      return function rollback() {
         queryClient.setQueryData(['issues', issueNumber], data => ({
           ...data,
-          assignee,
+          assignee: oldAssignee,
         }))
-
-        return function rollback() {
-          queryClient.setQueryData(['issues', issueNumber], data => ({
-            ...data,
-            assignee: oldAssignee,
-          }))
-        }
-      },
-      onError: (error, variables, rollback) => {
-        rollback()
-      },
-      onSettled: () => {
-        queryClient.invalidateQueries(['issues', issueNumber], { exact: true })
-      },
-    }
-  )
+      }
+    },
+    onError: (error, variables, rollback) => {
+      rollback()
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['issues', issueNumber],
+        exact: true,
+      })
+    },
+  })
 
   return (
     <div className='issue-options'>
