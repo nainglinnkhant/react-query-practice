@@ -1,11 +1,12 @@
-import React from "react";
-import ReactDOM from "react-dom";
-import "./index.css";
-import App from "./App";
-import { BrowserRouter } from "react-router-dom";
-import { worker } from "@uidotdev/react-query-api";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import React from 'react'
+import { createRoot } from 'react-dom/client'
+import { BrowserRouter } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
+import { worker } from '@uidotdev/react-query-api'
+
+import App from './App'
+import './index.css'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -13,27 +14,29 @@ const queryClient = new QueryClient({
       staleTime: 1000 * 60,
     },
   },
-});
+})
 
-new Promise((res) => setTimeout(res, 100))
+const container = document.getElementById('root')
+const root = createRoot(container)
+
+new Promise(res => setTimeout(res, 100))
   .then(() =>
     worker.start({
       quiet: true,
-      onUnhandledRequest: "bypass",
+      onUnhandledRequest: 'bypass',
     })
   )
   .then(() => {
-    ReactDOM.render(
+    root.render(
       <React.StrictMode>
         <QueryClientProvider client={queryClient}>
           <BrowserRouter>
-            <div className="container">
+            <div className='container'>
               <App />
             </div>
           </BrowserRouter>
           <ReactQueryDevtools />
         </QueryClientProvider>
-      </React.StrictMode>,
-      document.getElementById("root")
-    );
-  });
+      </React.StrictMode>
+    )
+  })
